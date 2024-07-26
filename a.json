@@ -1,0 +1,134 @@
+{
+    "requestStatus": {
+        "success": true,
+        "version": "v1"
+    },
+    "product": {
+        "productType": "ACTIVITY",
+        "name": "Popsicle Tour Group",
+        "shortDescription": "Popsicle Tour oh la li la. Popsicle Tour oh la li la. Popsicle Tour oh la li la. Popsicle Tour oh la li la. ",
+        "description": "Popsicle Tour oh la li la. Popsicle Tour oh la li la. Popsicle Tour oh la li la. Popsicle Tour oh la li la.&nbsp;Popsicle Tour oh la li la. Popsicle Tour oh la li la. Popsicle Tour oh la li la. Popsicle Tour oh la li la.&nbsp;Popsicle Tour oh la li la. Popsicle Tour oh la li la. Popsicle Tour oh la li la. Popsicle Tour oh la li la.&nbsp;Popsicle Tour oh la li la. Popsicle Tour oh la li la. Popsicle Tour oh la li la. Popsicle Tour oh la li la.&nbsp;",
+        "productCode": "PNCGDY",
+        "internalCode": "PNCGDY",
+        "supplierId": 1075,
+        "supplierAlias": "rezdydemotest",
+        "supplierName": "Rezdy API Certification Use",
+        "timezone": "Pacific/Pago_Pago",
+        "advertisedPrice": 42.0,
+        "priceOptions": [
+            {
+                "price": 42.0,
+                "label": "Group from 2 to 4",
+                "id": 960148,
+                "seatsUsed": 1,
+                "minQuantity": 2,
+                "maxQuantity": 4,
+                "priceGroupType": "EACH",
+                "productCode": "PNCGDY"
+            },
+            {
+                "price": 52.0,
+                "label": "Group from 5 to 8",
+                "id": 960149,
+                "seatsUsed": 1,
+                "minQuantity": 5,
+                "maxQuantity": 8,
+                "priceGroupType": "EACH",
+                "productCode": "PNCGDY"
+            }
+        ],
+        "currency": "AUD",
+        "unitLabel": "Participant",
+        "unitLabelPlural": "Participants",
+        "quantityRequired": true,
+        "quantityRequiredMin": 1,
+        "quantityRequiredMax": 10,
+        "images": [
+            {
+                "id": 30949,
+                "itemUrl": "https://img.rezdy-staging.com/PRODUCT_IMAGE/1075/Popsicle.jpeg",
+                "thumbnailUrl": "https://img.rezdy-staging.com/PRODUCT_IMAGE/1075/Popsicle_tb.jpeg",
+                "mediumSizeUrl": "https://img.rezdy-staging.com/PRODUCT_IMAGE/1075/Popsicle_med.jpeg",
+                "largeSizeUrl": "https://img.rezdy-staging.com/PRODUCT_IMAGE/1075/Popsicle_lg.jpeg"
+            }
+        ],
+        "videos": [],
+        "bookingMode": "INVENTORY",
+        "charter": false,
+        "terms": "",
+        "bookingFields": [
+            {
+                "label": "First Name",
+                "requiredPerParticipant": false,
+                "requiredPerBooking": false,
+                "visiblePerParticipant": true,
+                "visiblePerBooking": true,
+                "fieldType": "String"
+            },
+            {
+                "label": "Last Name",
+                "requiredPerParticipant": false,
+                "requiredPerBooking": false,
+                "visiblePerParticipant": true,
+                "visiblePerBooking": true,
+                "fieldType": "String"
+            },
+            {
+                "label": "Mobile",
+                "requiredPerParticipant": false,
+                "requiredPerBooking": false,
+                "visiblePerParticipant": false,
+                "visiblePerBooking": true,
+                "fieldType": "Phone"
+            },
+            {
+                "label": "Email",
+                "requiredPerParticipant": false,
+                "requiredPerBooking": false,
+                "visiblePerParticipant": false,
+                "visiblePerBooking": true,
+                "fieldType": "String"
+            },
+            {
+                "label": "Country",
+                "requiredPerParticipant": false,
+                "requiredPerBooking": false,
+                "visiblePerParticipant": false,
+                "visiblePerBooking": true,
+                "fieldType": "List"
+            },
+            {
+                "label": "Special Requirements",
+                "requiredPerParticipant": false,
+                "requiredPerBooking": false,
+                "visiblePerParticipant": false,
+                "visiblePerBooking": true,
+                "fieldType": "String"
+            }
+        ],
+        "latitude": -25.274398,
+        "longitude": 133.775136,
+        "confirmMode": "AUTOCONFIRM",
+        "agentPaymentType": "FULL_AGENT",
+        "maxCommissionPercent": 20.0,
+        "commissionIncludesExtras": true,
+        "dateCreated": "2023-06-09T05:45:44Z",
+        "dateUpdated": "2024-01-30T06:29:48Z",
+        "locationAddress": {
+            "addressLine": "241 Commonwealth Street",
+            "postCode": "2010",
+            "city": "Surry Hills",
+            "state": "NSW",
+            "countryCode": "au",
+            "latitude": -25.274398,
+            "longitude": 133.775136
+        },
+        "languages": [
+            "en_au"
+        ],
+        "tags": [],
+        "waitListingEnabled": false,
+        "isApiBookingSupported": true,
+        "isMultiProductBookingSupported": true
+    }
+}
