@@ -21,7 +21,7 @@ function fetchAllProductsParallel($apiKey) {
     $handles = [];
 
     // Initialize multiple cURL handles
-    for ($i = 0; $i < 30; $i++) {
+    for ($i = 0; $i < 40; $i++) {
         $offset = $i * 100;  // Calculate offset for each iteration
         $url = "https://api.rezdy.com/v1/products/marketplace?apiKey={$apiKey}&offset={$offset}&limit=100";
         $ch = curl_init();
@@ -56,6 +56,7 @@ function fetchAllProductsParallel($apiKey) {
 
 // Function to insert product data into database
 function insertProductsIntoDB($products, $conn) {
+    $stmtSelect = $conn->prepare("SELECT COUNT(*) FROM products WHERE productCode = ?");
     $stmtInsert = $conn->prepare("INSERT INTO products (name, productCode, shortDescription, productType, itemUrl) VALUES (?, ?, ?, ?, ?)");
 
     foreach ($products as $product) {
@@ -65,11 +66,20 @@ function insertProductsIntoDB($products, $conn) {
         $productType = $product['productType'];
         $itemUrl = !empty($product['images']) ? $product['images'][0]['itemUrl'] : '';
 
-        // Insert the product into the database
-        $stmtInsert->bind_param("sssss", $name, $productCode, $shortDescription, $productType, $itemUrl);
-        $stmtInsert->execute();
+        // Check if the product already exists in the database
+        $stmtSelect->bind_param("s", $productCode);
+        $stmtSelect->execute();
+        $stmtSelect->bind_result($count);
+        $stmtSelect->fetch();
+
+        if ($count == 0) {
+            // Insert the new product if it doesn't exist
+            $stmtInsert->bind_param("sssss", $name, $productCode, $shortDescription, $productType, $itemUrl);
+            $stmtInsert->execute();
+        }
     }
 
+    $stmtSelect->close();
     $stmtInsert->close();
 }
 
