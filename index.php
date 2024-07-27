@@ -1,4 +1,9 @@
-<?php include 'header.php'; ?>
+<?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+session_start();
+include 'header.php'; 
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +20,6 @@
             box-sizing: border-box;
             font-family: 'Poppins', sans-serif;
         }
-
         .header {
             min-height: 100vh;
             background-image: linear-gradient(rgba(0,0,0,0.3),rgba(0,0,0,0.3)),url(images/banner_tdu.png);
@@ -27,18 +31,15 @@
             align-items: center;
             text-align: center;
         }
-
         .container {
             padding: 0 5%;
         }
-
         .header h1 {
             font-size: 8vw;
             font-weight: 500;
             color: #ffeb3b; /* Changed the color to yellow for better visibility */
             margin-bottom: 20px;
         }
-
         .search-bar {
             background: #B7D3F2;
             width: 90%;
@@ -51,14 +52,12 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             flex-direction: column;
         }
-
         .search-bar form {
             width: 100%;
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
-
         .search-bar form input, .search-bar form select {
             border: 0;
             outline: none;
@@ -68,7 +67,6 @@
             width: 100%;
             box-sizing: border-box;
         }
-
         .search-bar form button {
             padding: 8px 12px; /* Reduced padding */
             background: #177E89;
@@ -81,25 +79,20 @@
             justify-content: center;
             font-size: 14px; /* Smaller font size */
         }
-
         .search-bar form button img {
             width: 20px;
         }
-
         .location-input {
             width: 100%;
         }
-
         .search-bar form label {
             font-weight: 600;
             display: block;
             margin-bottom: 5px;
         }
-
         .cal, .guest {
             width: 100%;
         }
-
         /* Center align the form items */
         .form-section {
             display: flex;
@@ -110,7 +103,6 @@
             max-width: 500px; /* Reduced max-width */
             margin: 0 auto; /* Center the booking container */
         }
-
         .form-section form {
             display: flex;
             justify-content: center;
@@ -118,7 +110,6 @@
             flex-direction: column;
             width: 100%;
         }
-
         .form-section .form__group {
             display: flex;
             justify-content: center;
@@ -128,7 +119,6 @@
             max-width: 350px; /* Reduced max-width */
             margin: 0 auto; /* Center the form group */
         }
-
         .form-section .input__group {
             width: 100%;
             margin-bottom: 10px;
@@ -297,8 +287,12 @@
 </head>
 <body>
     <?php
-    function getRezdyProducts($apiKey) {
-        $url = "https://api.rezdy-staging.com/v1/products/marketplace?apiKey=$apiKey";
+    function getRezdyProducts($apiKey, $offset) {
+        $limit = 100;
+        $urlBase = "https://api.rezdy.com/v1/products/marketplace";
+        // Ensure the API key is properly appended to the URL
+        $url = "$urlBase?apiKey=$apiKey&limit=$limit&offset=$offset";
+    
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
@@ -306,15 +300,12 @@
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $response = curl_exec($ch);
         if ($response === false) {
-            die("Error: Curl request failed: " . curl_error($ch));
+            return ["error" => curl_error($ch)];
         }
         curl_close($ch);
-        $data = json_decode($response, true);
-        if ($data === null) {
-            die("Error: Failed to decode JSON response");
-        }
-        return $data;
+        return json_decode($response, true);
     }
+    
 
     function displayCityCards($productsByCity) {
         $output = '<div class="popular__grid">';
@@ -336,8 +327,9 @@
         return $output;
     }
 
-    $apiKey = "81c3566e60ef42e6afa1c2719e7843fd";
-    $productDetails = getRezdyProducts($apiKey);
+    $apiKey = "b5a46c6c39624b908c2aef115af33942";
+    $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
+    $productDetails = getRezdyProducts($apiKey, $offset);
 
     // Organize products by city
     $productsByCity = [];
@@ -438,6 +430,42 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script>
+    let offset = 0;
+    const limit = 100;
+
+    function fetchProducts() {
+        console.log('Requesting products at offset:', offset); // Log the current offset before fetching
+        $.ajax({
+            url: 'fetch_products.php',  // Make sure this is the correct endpoint for fetching products
+            type: 'GET',
+            data: { offset: offset },
+            dataType: 'json',
+            success: function(data) {
+                console.log("Received data:", data); // Log entire data object
+                if (data.error) {
+                    console.error('API Error:', data.error);
+                    return;
+                }
+
+                console.log('Products fetched:', data.products);
+                if (data.products.length < limit) {
+                    console.log('All products have been fetched. Total products fetched:', offset + data.products.length);
+                } else {
+                    offset += limit;
+                    setTimeout(fetchProducts, 5000);
+                }
+            },
+
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', error);
+            }
+        });
+    }
+
+    // Start the initial fetch
+    fetchProducts();
+
+
         $(function() {
             var availableCities = <?php echo json_encode($cityNames); ?>;
             $("#city").autocomplete({
