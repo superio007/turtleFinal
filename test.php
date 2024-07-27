@@ -93,3 +93,11 @@ $conn->close();
 
 echo "Products inserted successfully.";
 ?>
+CREATE TABLE products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255),
+    productCode VARCHAR(50),
+    shortDescription TEXT,
+    productType VARCHAR(50),
+    itemUrl VARCHAR(255)
+);
