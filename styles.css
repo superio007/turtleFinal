@@ -222,9 +222,9 @@ nav {
   color: var(--text-dark);
 }
 
-.popular__content p {
+/* .popular__content p {
   color: var(--text-light);
-}
+} */
 
 .client {
   background-color: var(--extra-light);

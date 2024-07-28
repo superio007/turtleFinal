@@ -7,6 +7,8 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.4.0/fonts/remixicon.css" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <title>City Products | WDM&Co</title>
     <style>
         /* Your CSS styles here */
@@ -48,8 +50,8 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             border-radius: 10px;
             margin: 2rem auto;
-            width: 90%;
-            max-width: 1200px;
+            /* width: 20%;
+            max-width: 1200px; */
         }
 
         .filter__container form {
@@ -68,7 +70,7 @@
 
         .filter__container select, #city,
         .filter__container input[type="date"] {
-            width: 100%;
+            width: 83%;
             padding: 0.75rem 1rem;
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -107,8 +109,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             border-radius: 10px;
             margin: 2rem auto;
-            width: 90%;
-            max-width: 1200px;
         }
 
         .section__header {
@@ -133,6 +133,9 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
             background: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .popular__card:hover {
@@ -148,18 +151,19 @@
         .popular__content {
             padding: 1rem;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
         }
 
         .popular__card__header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             margin-bottom: 10px;
+            flex-grow: 1;
         }
 
-        .popular__card__header h4 {
-            font-size: 1.25rem;
-            color: #333;
+        .popular__card__header p {
+            margin: 5px 0;
         }
 
         .view-details-btn {
@@ -172,6 +176,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: background 0.3s ease;
+            margin-top: auto;
         }
 
         .view-details-btn:hover {
@@ -334,7 +339,7 @@
     }
 
     function getRezdyProducts($conn) {
-        $sql = "SELECT * FROM products";
+        $sql = "SELECT * FROM products WHERE productType != 'TICKET'";
         $result = $conn->query($sql);
 
         if ($result->num_rows > 0) {
@@ -366,10 +371,12 @@
                 <img src='$productImage' alt='$productName' />
                 <div class='popular__content'>
                     <div class='popular__card__header'>
-                        <h4>$productName</h4>
-                        <h4>\$$productPrice</h4>
+                        <p><b>$productName</b></p>
+                        <p><b>\$$productPrice</b></p>
                     </div>
-                    <a href='productdetails.php?productCode=$productCode' class='view-details-btn'>View Details</a>
+                    <div style=\"d-flex justify-content-center my-3\">
+                        <a style=\"text-decoration:none;\" href='productdetails.php?productCode=$productCode' class='view-details-btn'>View Details</a>
+                    </div>
                 </div>
             </div>";
         }
@@ -481,7 +488,6 @@
         }
     }
     ?>
-
     <header class="section__container header__container">
         <div class="header__image__container">
             <div class="header__content">
@@ -490,52 +496,56 @@
         </div>
     </header>
 
-    <section class="section__container filter__container">
-        <form method="GET" action="">
-            <div class="filter__group">
-                <label for="country">Country Filter:</label>
-                <select name="country" id="country">
-                    <option value="All" <?php echo ($selectedCountry === 'All') ? 'selected' : ''; ?>>All</option>
-                    <option value="Australia" <?php echo ($selectedCountry === 'Australia') ? 'selected' : ''; ?>>Australia</option>
-                    <option value="New Zealand" <?php echo ($selectedCountry === 'New Zealand') ? 'selected' : ''; ?>>New Zealand</option>
-                    <option value="Other" <?php echo ($selectedCountry === 'Other') ? 'selected' : ''; ?>>Other</option>
-                </select>
-            </div>
-            <div class="filter__group">
-                <label for="city">City:</label>
-                <input type="text" name="city" id="city" placeholder="Enter city name" value="<?php echo htmlspecialchars($selectedCity); ?>">
-            </div>
-            <div class="filter__group">
-                <label for="productType">Product Type:</label>
-                <select name="productType" id="productType">
-                    <option value="">All Types</option>
-                    <?php
-                    foreach ($productTypes as $type) {
-                        echo "<option value=\"$type\" " . ($selectedProductType === $type ? 'selected' : '') . ">$type</option>";
-                    }
-                    ?>
-                </select>
-            </div>
-            <div class="filter__group">
-                <label for="rate">Rate:</label>
-                <select name="rate" id="rate">
-                    <option value="">All Rates</option>
-                    <option value="low" <?php echo ($selectedRate === 'low') ? 'selected' : ''; ?>>Low to High</option>
-                    <option value="high" <?php echo ($selectedRate === 'high') ? 'selected' : ''; ?>>High to Low</option>
-                </select>
-            </div>
-            <div class="filter__group" style="height:3vh;align-content:end;">
-                <button type="submit">Apply Filters</button>
-            </div>
-        </form>
-    </section>
+    <div class="container">
+    <section id="main-out" class="row">
+        <section class="section__container filter__container col-2">
+            <form method="GET" action="">
+                <div class="filter__group">
+                    <label for="country">Country Filter:</label>
+                    <select name="country" id="country">
+                        <option value="All" <?php echo ($selectedCountry === 'All') ? 'selected' : ''; ?>>All</option>
+                        <option value="Australia" <?php echo ($selectedCountry === 'Australia') ? 'selected' : ''; ?>>Australia</option>
+                        <option value="New Zealand" <?php echo ($selectedCountry === 'New Zealand') ? 'selected' : ''; ?>>New Zealand</option>
+                        <option value="Other" <?php echo ($selectedCountry === 'Other') ? 'selected' : ''; ?>>Other</option>
+                    </select>
+                </div>
+                <div class="filter__group">
+                    <label for="city">City:</label>
+                    <input type="text" name="city" id="city" placeholder="Enter city name" value="<?php echo htmlspecialchars($selectedCity); ?>">
+                </div>
+                <div class="filter__group">
+                    <label for="productType">Product Type:</label>
+                    <select name="productType" id="productType">
+                        <option value="">All Types</option>
+                        <?php
+                        foreach ($productTypes as $type) {
+                            echo "<option value=\"$type\" " . ($selectedProductType === $type ? 'selected' : '') . ">$type</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+                <div class="filter__group">
+                    <label for="rate">Rate:</label>
+                    <select name="rate" id="rate">
+                        <option value="">All Rates</option>
+                        <option value="low" <?php echo ($selectedRate === 'low') ? 'selected' : ''; ?>>Low to High</option>
+                        <option value="high" <?php echo ($selectedRate === 'high') ? 'selected' : ''; ?>>High to Low</option>
+                    </select>
+                </div>
+                <div class="filter__group" style="height:3vh;align-content:end;">
+                    <button type="submit">Apply Filters</button>
+                </div>
+            </form>
+        </section>
 
-    <section class="section__container popular__container">
-        <h2 class="section__header">Popular Products</h2>
-        <?php 
-        echo empty($filteredProducts) ? "<p class=\"text-center\">No products available for the selected city and filters.</p>" : displayPopularHotels($filteredProducts, $page, $perPage);
-        ?>
+        <section class="section__container popular__container col-9">
+            <h2 class="section__header">Popular Products</h2>
+            <?php 
+            echo empty($filteredProducts) ? "<p class=\"text-center\">No products available for the selected city and filters.</p>" : displayPopularHotels($filteredProducts, $page, $perPage);
+            ?>
+        </section>
     </section>
+    </div>
 
     <footer class="footer">
         <div class="section__container footer__container">
