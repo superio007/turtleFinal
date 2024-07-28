@@ -214,6 +214,33 @@
             padding-top: 1rem;
         }
 
+        .pagination {
+            display: flex;
+            justify-content: center;
+            padding: 1rem 0;
+        }
+
+        .pagination a {
+            margin: 0 5px;
+            padding: 0.5rem 0.75rem;
+            background: #297373;
+            color: #fff;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+
+        .pagination a:hover {
+            background: #145f68;
+        }
+
+        .pagination strong {
+            margin: 0 5px;
+            padding: 0.5rem 0.75rem;
+            background: #ffeb3b;
+            color: #000;
+            border-radius: 5px;
+        }
+
         @media screen and (max-width: 768px) {
             .header h1 {
                 font-size: 2rem;
@@ -276,7 +303,7 @@
                             }
                         });
                     },
-                    minLength: 2
+                    minLength: 1
                 });
             }
 
@@ -321,14 +348,19 @@
         }
     }
 
-    function displayPopularHotels($products) {
+    function displayPopularHotels($products, $page, $perPage) {
+        $totalProducts = count($products);
+        $totalPages = ceil($totalProducts / $perPage);
+        $start = ($page - 1) * $perPage;
+        $products = array_slice($products, $start, $perPage);
+    
         $output = "<div class='popular__grid'>";
         foreach ($products as $product) {
             $productName = htmlspecialchars($product['name']);
             $productPrice = htmlspecialchars($product['advertisedPrice']);
             $productImage = isset($product['itemUrl']) ? htmlspecialchars($product['itemUrl']) : 'path/to/default-image.jpg';
             $productCode = htmlspecialchars($product['productCode']);
-
+    
             $output .= "
             <div class='popular__card'>
                 <img src='$productImage' alt='$productName' />
@@ -342,10 +374,47 @@
             </div>";
         }
         $output .= "</div>";
+    
+        // Preserve existing query parameters
+        parse_str($_SERVER['QUERY_STRING'], $queryParams);
+        unset($queryParams['page']);
+    
+        // Pagination controls
+        $output .= "<div class='pagination'>";
+        $startPage = max(1, $page - 5);
+        $endPage = min($totalPages, $page + 4);
+    
+        if ($page > 1) {
+            $queryParams['page'] = $page - 1;
+            $queryString = http_build_query($queryParams);
+            $output .= "<a href='?$queryString'>Back</a> ";
+        }
+    
+        for ($i = $startPage; $i <= $endPage; $i++) {
+            $queryParams['page'] = $i;
+            $queryString = http_build_query($queryParams);
+            if ($i == $page) {
+                $output .= "<strong>$i</strong> ";
+            } else {
+                $output .= "<a href='?$queryString'>$i</a> ";
+            }
+        }
+    
+        if ($page < $totalPages) {
+            $queryParams['page'] = $page + 1;
+            $queryString = http_build_query($queryParams);
+            $output .= "<a href='?$queryString'>Next</a>";
+        }
+        $output .= "</div>";
+    
         return $output;
     }
 
     $products = getRezdyProducts($conn);
+
+    // Pagination
+    $perPage = 6;
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 
     // Organize products by city and filter by product types
     $productsByCity = [];
@@ -411,7 +480,6 @@
             });
         }
     }
-
     ?>
 
     <header class="section__container header__container">
@@ -465,7 +533,7 @@
     <section class="section__container popular__container">
         <h2 class="section__header">Popular Products</h2>
         <?php 
-        echo empty($filteredProducts) ? "<p class=\"text-center\">No products available for the selected city and filters.</p>" : displayPopularHotels($filteredProducts);
+        echo empty($filteredProducts) ? "<p class=\"text-center\">No products available for the selected city and filters.</p>" : displayPopularHotels($filteredProducts, $page, $perPage);
         ?>
     </section>
 

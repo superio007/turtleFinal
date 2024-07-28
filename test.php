@@ -13,6 +13,16 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Function to fetch existing product codes from the database
+function fetchExistingProductCodes($conn) {
+    $existingProductCodes = [];
+    $result = $conn->query("SELECT productCode FROM products");
+    while ($row = $result->fetch_assoc()) {
+        $existingProductCodes[] = $row['productCode'];
+    }
+    return $existingProductCodes;
+}
+
 // Function to fetch all products in parallel
 function fetchAllProductsParallel($apiKey) {
     $allProducts = [];
@@ -21,7 +31,7 @@ function fetchAllProductsParallel($apiKey) {
     $handles = [];
 
     // Initialize multiple cURL handles
-    for ($i = 0; $i < 40; $i++) {
+    for ($i = 500; $i < 400; $i++) {
         $offset = $i * 100;  // Calculate offset for each iteration
         $url = "https://api.rezdy.com/v1/products/marketplace?apiKey={$apiKey}&offset={$offset}&limit=100";
         $ch = curl_init();
@@ -76,13 +86,23 @@ function insertProductsIntoDB($products, $conn) {
     $stmtInsert->close();
 }
 
-// Fetch products and insert into database
+// Fetch existing product codes from the database
+$existingProductCodes = fetchExistingProductCodes($conn);
+
+// Fetch products from the API
 $apiKey = 'b5a46c6c39624b908c2aef115af33942';
 $products = fetchAllProductsParallel($apiKey);
-insertProductsIntoDB($products, $conn);
+
+// Filter out products with existing product codes
+$newProducts = array_filter($products, function($product) use ($existingProductCodes) {
+    return !in_array($product['productCode'], $existingProductCodes);
+});
+
+// Insert only new products into the database
+insertProductsIntoDB($newProducts, $conn);
 
 // Close the database connection
 $conn->close();
 
-echo "Products inserted successfully.";
+echo "New products inserted successfully.";
 ?>
