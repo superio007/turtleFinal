@@ -524,7 +524,7 @@
                     <option value="high" <?php echo ($selectedRate === 'high') ? 'selected' : ''; ?>>High to Low</option>
                 </select>
             </div>
-            <div class="filter__group" style="height:2vh;">
+            <div class="filter__group" style="height:3vh;align-content:end;">
                 <button type="submit">Apply Filters</button>
             </div>
         </form>
