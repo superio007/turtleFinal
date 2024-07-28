@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <title>City Products | WDM&Co</title>
     <style>
-        /* Include your CSS styles here */
+        /* Your CSS styles here */
         * {
             margin: 0;
             padding: 0;
@@ -66,7 +66,7 @@
             display: block;
         }
 
-        .filter__container select,
+        .filter__container select, #city,
         .filter__container input[type="date"] {
             width: 100%;
             padding: 0.75rem 1rem;
@@ -77,7 +77,7 @@
             transition: border-color 0.3s ease;
         }
 
-        .filter__container select:focus,
+        .filter__container select:focus, #city,
         .filter__container input[type="date"]:focus {
             border-color: #297373;
             background: #fff;
@@ -256,34 +256,54 @@
             }
         }
     </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script>
+        $(function() {
+            $("#city").autocomplete({
+                source: "fetch_cities.php",
+                minLength: 1
+            });
+        });
+    </script>
 </head>
 <body>
     <?php
-    function getRezdyProducts($apiKey) {
-        $url = "https://api.rezdy-staging.com/v1/products/marketplace?apiKey=$apiKey";
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $response = curl_exec($ch);
-        if ($response === false) {
-            die("Error: Curl request failed: " . curl_error($ch));
+    // Database connection details
+    $servername = "localhost";
+    $username = "root";
+    $password = "";
+    $dbname = "test";
+
+    // Create connection
+    $conn = new mysqli($servername, $username, $password, $dbname);
+
+    // Check connection
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+
+    function getRezdyProducts($conn) {
+        $sql = "SELECT * FROM products";
+        $result = $conn->query($sql);
+
+        if ($result->num_rows > 0) {
+            $products = [];
+            while($row = $result->fetch_assoc()) {
+                $products[] = $row;
+            }
+            return $products;
+        } else {
+            return [];
         }
-        curl_close($ch);
-        $data = json_decode($response, true);
-        if ($data === null) {
-            die("Error: Failed to decode JSON response");
-        }
-        return $data;
     }
 
     function displayPopularHotels($products) {
         $output = "<div class='popular__grid'>";
         foreach ($products as $product) {
             $productName = htmlspecialchars($product['name']);
-            $productPrice = htmlspecialchars($product['priceOptions'][0]['price']);
-            $productImage = isset($product['images'][0]['mediumSizeUrl']) ? htmlspecialchars($product['images'][0]['mediumSizeUrl']) : 'path/to/default-image.jpg';
+            $productPrice = htmlspecialchars($product['advertisedPrice']);
+            $productImage = isset($product['itemUrl']) ? htmlspecialchars($product['itemUrl']) : 'path/to/default-image.jpg';
             $productCode = htmlspecialchars($product['productCode']);
 
             $output .= "
@@ -302,19 +322,17 @@
         return $output;
     }
 
-    $apiKey = "81c3566e60ef42e6afa1c2719e7843fd";
-    $productDetails = getRezdyProducts($apiKey);
+    $products = getRezdyProducts($conn);
 
     // Organize products by city and filter by product types
     $productsByCity = [];
     $productTypes = [];
-    $languages = [];
-    $tags = [];
+    $cities = [];
     $rates = [];
 
-    if (!empty($productDetails['products'])) {
-        foreach ($productDetails['products'] as $product) {
-            $city = isset($product['locationAddress']['city']) ? $product['locationAddress']['city'] : 'Unknown City';
+    if (!empty($products)) {
+        foreach ($products as $product) {
+            $city = isset($product['city']) ? $product['city'] : 'Unknown City';
             $productsByCity[$city][] = $product;
 
             // Collect unique product types
@@ -322,70 +340,49 @@
                 $productTypes[] = $product['productType'];
             }
 
-            // Collect unique languages
-            if (isset($product['languages'])) {
-                foreach ($product['languages'] as $language) {
-                    if (!in_array($language, $languages)) {
-                        $languages[] = $language;
-                    }
-                }
-            }
-
-            // Collect unique tags
-            foreach ($product['tags'] as $tag) {
-                if (!in_array($tag, $tags)) {
-                    $tags[] = $tag;
-                }
+            // Collect unique cities
+            if (!in_array($city, $cities)) {
+                $cities[] = $city;
             }
 
             // Collect unique rates
-            foreach ($product['priceOptions'] as $priceOption) {
-                if (!in_array($priceOption['price'], $rates)) {
-                    $rates[] = $priceOption['price'];
-                }
+            if (!in_array($product['advertisedPrice'], $rates)) {
+                $rates[] = $product['advertisedPrice'];
             }
         }
     }
 
     sort($productTypes);
-    sort($languages);
-    sort($tags);
+    sort($cities);
     sort($rates);
 
     $selectedCity = isset($_GET['city']) ? $_GET['city'] : '';
     $selectedProductType = isset($_GET['productType']) ? $_GET['productType'] : '';
-    $selectedLanguage = isset($_GET['language']) ? $_GET['language'] : '';
-    $selectedTags = isset($_GET['tags']) ? $_GET['tags'] : '';
-    $selectedDate = isset($_GET['date']) ? $_GET['date'] : '';
     $selectedRate = isset($_GET['rate']) ? $_GET['rate'] : '';
 
     if (empty($selectedCity) || !isset($productsByCity[$selectedCity])) {
-        die('No products found for the selected city.');
-    }
-
-    // Filter products based on selected filters
-    $filteredProducts = array_filter($productsByCity[$selectedCity], function($product) use ($selectedProductType, $selectedLanguage, $selectedTags, $selectedDate, $selectedRate) {
-        $match = true;
-        if ($selectedProductType !== '' && $product['productType'] !== $selectedProductType) {
-            $match = false;
-        }
-        if ($selectedLanguage !== '' && (!isset($product['languages']) || !in_array($selectedLanguage, $product['languages']))) {
-            $match = false;
-        }
-        if ($selectedTags !== '' && !in_array($selectedTags, $product['tags'])) {
-            $match = false;
-        }
-        if ($selectedDate !== '' && !empty($product['availability'])) {
-            $availableDates = array_column($product['availability'], 'date');
-            if (!in_array($selectedDate, $availableDates)) {
+        $filteredProducts = [];
+    } else {
+        // Filter products based on selected filters
+        $filteredProducts = array_filter($productsByCity[$selectedCity], function($product) use ($selectedProductType, $selectedRate) {
+            $match = true;
+            if ($selectedProductType !== '' && $product['productType'] !== $selectedProductType) {
                 $match = false;
             }
+            return $match;
+        });
+
+        // Sort by rate if selected
+        if ($selectedRate === 'low') {
+            usort($filteredProducts, function($a, $b) {
+                return $a['advertisedPrice'] <=> $b['advertisedPrice'];
+            });
+        } elseif ($selectedRate === 'high') {
+            usort($filteredProducts, function($a, $b) {
+                return $b['advertisedPrice'] <=> $a['advertisedPrice'];
+            });
         }
-        if ($selectedRate !== '' && $selectedRate != $product['priceOptions'][0]['price']) {
-            $match = false;
-        }
-        return $match;
-    });
+    }
 
     ?>
 
@@ -399,7 +396,10 @@
 
     <section class="section__container filter__container">
         <form method="GET" action="">
-            <input type="hidden" name="city" value="<?php echo htmlspecialchars($selectedCity); ?>" />
+            <div class="filter__group">
+                <label for="city">City:</label>
+                <input type="text" name="city" id="city" placeholder="Enter city name" value="<?php echo htmlspecialchars($selectedCity); ?>">
+            </div>
             <div class="filter__group">
                 <label for="productType">Product Type:</label>
                 <select name="productType" id="productType">
@@ -412,54 +412,30 @@
                 </select>
             </div>
             <div class="filter__group">
-                <label for="language">Language:</label>
-                <select name="language" id="language">
-                    <option value="">All Languages</option>
-                    <?php
-                    foreach ($languages as $language) {
-                        echo "<option value=\"$language\" " . ($selectedLanguage === $language ? 'selected' : '') . ">$language</option>";
-                    }
-                    ?>
-                </select>
-            </div>
-            <div class="filter__group">
-                <label for="tags">Tags:</label>
-                <select name="tags" id="tags">
-                    <option value="">All Tags</option>
-                    <?php
-                    foreach ($tags as $tag) {
-                        echo "<option value=\"$tag\" " . ($selectedTags === $tag ? 'selected' : '') . ">$tag</option>";
-                    }
-                    ?>
-                </select>
-            </div>
-            <div class="filter__group">
-                <label for="date">Date:</label>
-                <input type="date" name="date" id="date" value="<?php echo htmlspecialchars($selectedDate); ?>" />
-            </div>
-            <div class="filter__group">
                 <label for="rate">Rate:</label>
                 <select name="rate" id="rate">
                     <option value="">All Rates</option>
-                    <?php
-                    foreach ($rates as $rate) {
-                        echo "<option value=\"$rate\" " . ($selectedRate == $rate ? 'selected' : '') . ">$rate</option>";
-                    }
-                    ?>
+                    <option value="low" <?php echo ($selectedRate === 'low') ? 'selected' : ''; ?>>Low to High</option>
+                    <option value="high" <?php echo ($selectedRate === 'high') ? 'selected' : ''; ?>>High to Low</option>
                 </select>
             </div>
-            <div class="filter__group">
+            <div class="filter__group" style="height: 2vh;">
                 <button type="submit">Apply Filters</button>
             </div>
         </form>
     </section>
 
-    <section class="section__container popular__container">
-        <h2 class="section__header">Popular Products</h2>
-        <?php 
-        echo displayPopularHotels($filteredProducts);
-        ?>
-    </section>
+    <?php if (!empty($filteredProducts)): ?>
+        <section class="section__container popular__container">
+            <h2 class="section__header">Popular Products</h2>
+            <?php echo displayPopularHotels($filteredProducts); ?>
+        </section>
+    <?php else: ?>
+        <section class="section__container popular__container">
+            <h2 class="section__header">Popular Products</h2>
+            <p class="text-center">No products are available.</p>
+        </section>
+    <?php endif; ?>
 
     <footer class="footer">
         <div class="section__container footer__container">
@@ -502,3 +478,4 @@
     </footer>
 </body>
 </html>
+<?php $conn->close(); ?>

@@ -56,8 +56,7 @@ function fetchAllProductsParallel($apiKey) {
 
 // Function to insert product data into database
 function insertProductsIntoDB($products, $conn) {
-    $stmtSelect = $conn->prepare("SELECT COUNT(*) FROM products WHERE productCode = ?");
-    $stmtInsert = $conn->prepare("INSERT INTO products (name, productCode, shortDescription, productType, itemUrl) VALUES (?, ?, ?, ?, ?)");
+    $stmtInsert = $conn->prepare("INSERT INTO products (name, productCode, shortDescription, productType, itemUrl, city, advertisedPrice, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
     foreach ($products as $product) {
         $name = $product['name'];
@@ -65,21 +64,15 @@ function insertProductsIntoDB($products, $conn) {
         $shortDescription = $product['shortDescription'];
         $productType = $product['productType'];
         $itemUrl = !empty($product['images']) ? $product['images'][0]['itemUrl'] : '';
+        $city = $product['locationAddress']['city'] ?? 'All';  // Use null coalescing operator to handle missing city
+        $advertisedPrice = $product['advertisedPrice'] ?? 0.0;  // Default to 0.0 if missing
+        $currency = $product['currency'] ?? '';  // Use null coalescing operator to handle missing currency
 
-        // Check if the product already exists in the database
-        $stmtSelect->bind_param("s", $productCode);
-        $stmtSelect->execute();
-        $stmtSelect->bind_result($count);
-        $stmtSelect->fetch();
-
-        if ($count == 0) {
-            // Insert the new product if it doesn't exist
-            $stmtInsert->bind_param("sssss", $name, $productCode, $shortDescription, $productType, $itemUrl);
-            $stmtInsert->execute();
-        }
+        // Insert the new product
+        $stmtInsert->bind_param("ssssssds", $name, $productCode, $shortDescription, $productType, $itemUrl, $city, $advertisedPrice, $currency);
+        $stmtInsert->execute();
     }
 
-    $stmtSelect->close();
     $stmtInsert->close();
 }
 
@@ -93,11 +86,3 @@ $conn->close();
 
 echo "Products inserted successfully.";
 ?>
-CREATE TABLE products (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255),
-    productCode VARCHAR(50),
-    shortDescription TEXT,
-    productType VARCHAR(50),
-    itemUrl VARCHAR(255)
-);

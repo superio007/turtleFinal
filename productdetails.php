@@ -1,9 +1,12 @@
 <?php
 session_start();
 date_default_timezone_set('UTC');
+if(isset($_GET['productCode'])){
+    $productCode = $_GET['productCode'];
+}
 
 function getRezdyProductDetails($apiKey, $productCode) {
-    $url = "https://api.rezdy-staging.com/v1/products/$productCode?apiKey=" . urlencode($apiKey);
+    $url = "https://api.rezdy.com/v1/products/$productCode?apiKey=" . urlencode($apiKey);
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
@@ -24,7 +27,7 @@ function getRezdyProductDetails($apiKey, $productCode) {
 }
 
 function checkRezdyAvailability($apiKey, $productCode, $startTimeLocal, $endTimeLocal) {
-    $url = "https://api.rezdy-staging.com/v1/availability?apiKey=" . urlencode($apiKey) . "&productCode=" . urlencode($productCode) . "&startTimeLocal=" . urlencode($startTimeLocal) . "&endTimeLocal=" . urlencode($endTimeLocal);
+    $url = "https://api.rezdy.com/v1/availability?apiKey=" . urlencode($apiKey) . "&productCode=" . urlencode($productCode) . "&startTimeLocal=" . urlencode($startTimeLocal) . "&endTimeLocal=" . urlencode($endTimeLocal);
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
@@ -47,7 +50,7 @@ function formatRezdyDate($date) {
     return $date->format('Y-m-d H:i:s'); // Format for Rezdy API
 }
 
-$apiKey = "81c3566e60ef42e6afa1c2719e7843fd";
+$apiKey = "b5a46c6c39624b908c2aef115af33942";
 $productCode = $_GET['productCode'] ?? '';
 if (empty($productCode)) {
     die("Error: Product code must be provided.");
