@@ -260,26 +260,32 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script>
         $(function() {
-            $("#countryFilter").change(function() {
-                $("#city").val("");
-            });
+            function fetchCitySuggestions(country) {
+                $("#city").autocomplete({
+                    source: function(request, response) {
+                        $.ajax({
+                            url: "fetch_cities.php",
+                            type: "GET",
+                            dataType: "json",
+                            data: {
+                                term: request.term,
+                                country: country
+                            },
+                            success: function(data) {
+                                response(data);
+                            }
+                        });
+                    },
+                    minLength: 2
+                });
+            }
 
-            $("#city").autocomplete({
-                source: function(request, response) {
-                    var countryFilter = $("#countryFilter").val();
-                    $.ajax({
-                        url: "fetch_cities.php",
-                        data: {
-                            term: request.term,
-                            countryFilter: countryFilter
-                        },
-                        dataType: "json",
-                        success: function(data) {
-                            response(data);
-                        }
-                    });
-                },
-                minLength: 1
+            var countryFilter = $("#country").val();
+            fetchCitySuggestions(countryFilter);
+
+            $("#country").on("change", function() {
+                countryFilter = $(this).val();
+                fetchCitySuggestions(countryFilter);
             });
         });
     </script>
@@ -345,6 +351,7 @@
     $productsByCity = [];
     $productTypes = [];
     $cities = [];
+    $tags = [];
     $rates = [];
 
     if (!empty($products)) {
@@ -371,18 +378,21 @@
 
     sort($productTypes);
     sort($cities);
+    sort($tags);
     sort($rates);
 
+    $selectedCountry = isset($_GET['country']) ? $_GET['country'] : '';
     $selectedCity = isset($_GET['city']) ? $_GET['city'] : '';
     $selectedProductType = isset($_GET['productType']) ? $_GET['productType'] : '';
+    $selectedTags = isset($_GET['tags']) ? $_GET['tags'] : '';
+    $selectedDate = isset($_GET['date']) ? $_GET['date'] : '';
     $selectedRate = isset($_GET['rate']) ? $_GET['rate'] : '';
-    $selectedCountryFilter = isset($_GET['countryFilter']) ? $_GET['countryFilter'] : '';
 
     if (empty($selectedCity) || !isset($productsByCity[$selectedCity])) {
         $filteredProducts = [];
     } else {
         // Filter products based on selected filters
-        $filteredProducts = array_filter($productsByCity[$selectedCity], function($product) use ($selectedProductType, $selectedRate) {
+        $filteredProducts = array_filter($productsByCity[$selectedCity], function($product) use ($selectedProductType, $selectedTags, $selectedDate, $selectedRate) {
             $match = true;
             if ($selectedProductType !== '' && $product['productType'] !== $selectedProductType) {
                 $match = false;
@@ -415,12 +425,12 @@
     <section class="section__container filter__container">
         <form method="GET" action="">
             <div class="filter__group">
-                <label for="countryFilter">Country Filter:</label>
-                <select name="countryFilter" id="countryFilter">
-                    <option value="">All</option>
-                    <option value="Australia" <?php echo ($selectedCountryFilter === 'Australia') ? 'selected' : ''; ?>>Australia</option>
-                    <option value="New Zealand" <?php echo ($selectedCountryFilter === 'New Zealand') ? 'selected' : ''; ?>>New Zealand</option>
-                    <option value="Other" <?php echo ($selectedCountryFilter === 'Other') ? 'selected' : ''; ?>>Other</option>
+                <label for="country">Country Filter:</label>
+                <select name="country" id="country">
+                    <option value="All" <?php echo ($selectedCountry === 'All') ? 'selected' : ''; ?>>All</option>
+                    <option value="Australia" <?php echo ($selectedCountry === 'Australia') ? 'selected' : ''; ?>>Australia</option>
+                    <option value="New Zealand" <?php echo ($selectedCountry === 'New Zealand') ? 'selected' : ''; ?>>New Zealand</option>
+                    <option value="Other" <?php echo ($selectedCountry === 'Other') ? 'selected' : ''; ?>>Other</option>
                 </select>
             </div>
             <div class="filter__group">
@@ -452,17 +462,12 @@
         </form>
     </section>
 
-    <?php if (!empty($filteredProducts)): ?>
-        <section class="section__container popular__container">
-            <h2 class="section__header">Popular Products</h2>
-            <?php echo displayPopularHotels($filteredProducts); ?>
-        </section>
-    <?php else: ?>
-        <section class="section__container popular__container">
-            <h2 class="section__header">Popular Products</h2>
-            <p>No products are available.</p>
-        </section>
-    <?php endif; ?>
+    <section class="section__container popular__container">
+        <h2 class="section__header">Popular Products</h2>
+        <?php 
+        echo empty($filteredProducts) ? "<p class=\"text-center\">No products available for the selected city and filters.</p>" : displayPopularHotels($filteredProducts);
+        ?>
+    </section>
 
     <footer class="footer">
         <div class="section__container footer__container">
