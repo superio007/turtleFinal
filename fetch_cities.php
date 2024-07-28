@@ -1,5 +1,4 @@
 <?php
-// Database connection details
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -13,12 +12,22 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$searchTerm = $_GET['term'];
+$term = $_GET['term'];
+$countryFilter = $_GET['countryFilter'];
 
-$sql = "SELECT DISTINCT city FROM products WHERE city LIKE ?";
-$stmt = $conn->prepare($sql);
-$searchTerm = "%".$searchTerm."%";
-$stmt->bind_param("s", $searchTerm);
+$query = "SELECT DISTINCT city FROM products WHERE city LIKE ?";
+
+if ($countryFilter === 'Australia') {
+    $query .= " AND country = 'Australia'";
+} elseif ($countryFilter === 'New Zealand') {
+    $query .= " AND country = 'New Zealand'";
+} elseif ($countryFilter === 'Other') {
+    $query .= " AND country NOT IN ('Australia', 'New Zealand')";
+}
+
+$stmt = $conn->prepare($query);
+$searchTerm = '%' . $term . '%';
+$stmt->bind_param('s', $searchTerm);
 $stmt->execute();
 $result = $stmt->get_result();
 

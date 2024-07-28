@@ -214,7 +214,7 @@
             padding-top: 1rem;
         }
 
-        @media (max-width: 768px) {
+        @media screen and (max-width: 768px) {
             .header h1 {
                 font-size: 2rem;
             }
@@ -232,7 +232,7 @@
             }
         }
 
-        @media (max-width: 480px) {
+        @media screen and (max-width: 480px) {
             .header h1 {
                 font-size: 1.5rem;
             }
@@ -260,8 +260,25 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script>
         $(function() {
+            $("#countryFilter").change(function() {
+                $("#city").val("");
+            });
+
             $("#city").autocomplete({
-                source: "fetch_cities.php",
+                source: function(request, response) {
+                    var countryFilter = $("#countryFilter").val();
+                    $.ajax({
+                        url: "fetch_cities.php",
+                        data: {
+                            term: request.term,
+                            countryFilter: countryFilter
+                        },
+                        dataType: "json",
+                        success: function(data) {
+                            response(data);
+                        }
+                    });
+                },
                 minLength: 1
             });
         });
@@ -359,6 +376,7 @@
     $selectedCity = isset($_GET['city']) ? $_GET['city'] : '';
     $selectedProductType = isset($_GET['productType']) ? $_GET['productType'] : '';
     $selectedRate = isset($_GET['rate']) ? $_GET['rate'] : '';
+    $selectedCountryFilter = isset($_GET['countryFilter']) ? $_GET['countryFilter'] : '';
 
     if (empty($selectedCity) || !isset($productsByCity[$selectedCity])) {
         $filteredProducts = [];
@@ -397,6 +415,15 @@
     <section class="section__container filter__container">
         <form method="GET" action="">
             <div class="filter__group">
+                <label for="countryFilter">Country Filter:</label>
+                <select name="countryFilter" id="countryFilter">
+                    <option value="">All</option>
+                    <option value="Australia" <?php echo ($selectedCountryFilter === 'Australia') ? 'selected' : ''; ?>>Australia</option>
+                    <option value="New Zealand" <?php echo ($selectedCountryFilter === 'New Zealand') ? 'selected' : ''; ?>>New Zealand</option>
+                    <option value="Other" <?php echo ($selectedCountryFilter === 'Other') ? 'selected' : ''; ?>>Other</option>
+                </select>
+            </div>
+            <div class="filter__group">
                 <label for="city">City:</label>
                 <input type="text" name="city" id="city" placeholder="Enter city name" value="<?php echo htmlspecialchars($selectedCity); ?>">
             </div>
@@ -419,7 +446,7 @@
                     <option value="high" <?php echo ($selectedRate === 'high') ? 'selected' : ''; ?>>High to Low</option>
                 </select>
             </div>
-            <div class="filter__group" style="height: 2vh;">
+            <div class="filter__group" style="height:2vh;">
                 <button type="submit">Apply Filters</button>
             </div>
         </form>
@@ -433,7 +460,7 @@
     <?php else: ?>
         <section class="section__container popular__container">
             <h2 class="section__header">Popular Products</h2>
-            <p class="text-center">No products are available.</p>
+            <p>No products are available.</p>
         </section>
     <?php endif; ?>
 
